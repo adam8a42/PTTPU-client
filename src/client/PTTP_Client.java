@@ -12,83 +12,84 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Scanner;
 
 public class PTTP_Client {
 
     public static void main(String[] args) throws IOException {
- 
+    	
     	String message;
-        Scanner sc = new Scanner(System.in);			// GET PTTP/1.0
-        message = sc.nextLine();
-                
-        InetAddress serverAddress = InetAddress.getByName("localhost");
-        System.out.println(serverAddress + ":" +Config.PORT);
+        try (Scanner sc = new Scanner(System.in)) {
+			int port;
+			String host;
+			String pathToFile = "";
 
-        byte[] stringContents = message.getBytes(Config.ENCODING);
-/*
-        
-        Socket socket = new Socket(serverAddress, Config.PORT);
-        DatagramPacket sentPacket = new DatagramPacket(stringContents, stringContents.length);
-        sentPacket.setAddress(serverAddress);
-        sentPacket.setPort(42750);
-        socket.send(sentPacket);
-        
-        DatagramPacket recievePacket = new DatagramPacket( new byte[Config.BUFFER_SIZE], Config.BUFFER_SIZE);
-        socket.setSoTimeout(1010);
-*/
-        
-        try (Socket socket = new Socket(Config.HOST, Config.PORT)) {
-
-        	socket.setSoTimeout(1000);
-        	
-        	OutputStream output = socket.getOutputStream();
-            PrintWriter writer = new PrintWriter(output, true);
-            writer.println(message);
- 
-            InputStream input = socket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
- 
-            String line;
- 
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-        }catch (SocketTimeoutException ste){
-            System.out.println("Timeout");
-        }
-        
-/*        
-        try{
-            socket.receive(recievePacket);
-            System.out.println("Confirmation received");
-        }catch (SocketTimeoutException ste){
-            System.out.println("Timeout");
-        }
-  
-        while(true) {
-        	
-        	String command;
-            command= sc.nextLine();
-            
-            byte[] string = command.getBytes(Config.ENCODING);
-
-            DatagramPacket commandPacket = new DatagramPacket(string, string.length);
-            commandPacket.setAddress(serverAddress);
-            commandPacket.setPort(Config.PORT);
-            socket.send(commandPacket);
-            
-            recievePacket = new DatagramPacket( new byte[Config.BUFFER_SIZE], Config.BUFFER_SIZE);
-            
-            try{
-                socket.receive(recievePacket);
-                String list = new String(recievePacket.getData(), 0, recievePacket.getLength(), Config.ENCODING);
-                System.out.println(list);
-                
-            }catch (SocketTimeoutException ste){
-                System.out.println("Timeout");
-            }
-        }
-*/
+			while(true) {
+			    message = sc.nextLine();
+			    String[] split = message.split("/");
+			    
+			    if (split[0].equals("pttp:")) {
+			    	
+			    	port = Config.PORT;
+			    	host = split[2];
+			    	int i=3;
+			    	while(i < split.length) {
+			    		pathToFile += ("/" + split[i]);
+			    		i++;
+			    	}
+			    	break;
+			    }
+			    else if (split[0].equals("pttpu:")) {
+			    	
+			    	port = Config.PORT_U;
+			    	host = split[2];
+			    	int i=3;
+			    	while(i < split.length) {
+			    		pathToFile += ("/" + split[i]);
+			    		i++;
+			    	}
+			    	break;
+			    }
+			    else {
+			    	System.out.println("Incorrect input.");
+			    	continue;
+			    }
+			}
+			
+			try (Socket socket = new Socket(host, port)) {
+				socket.setSoTimeout(1000);
+				
+				OutputStream output = socket.getOutputStream();
+			    PrintWriter writer = new PrintWriter(output, true);
+			    
+			    InputStream input = socket.getInputStream();
+			    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+			    
+				if(port == 42750) {
+					
+				    writer.println("GET " + pathToFile + " PTTP/1.0");
+				    
+				    String line;
+				    while ((line = reader.readLine()) != null) {
+				        System.out.println(line);
+				    }
+				}
+				else if(port == 42751) {
+					
+					String encodedString = Base64.getEncoder().encodeToString(("GET " + pathToFile + " PTTP/1.0").getBytes());
+				    writer.println(encodedString);
+				    
+				    String line;
+				    while ((line = reader.readLine()) != null) {
+				    	byte[] decodedBytes = Base64.getDecoder().decode(line);
+				    	String decodedString = new String(decodedBytes);
+				        System.out.println(decodedString);
+				    }
+				}
+			}catch (SocketTimeoutException ste){
+			    System.out.println("Timeout");
+			}
+		}
     }
 }
