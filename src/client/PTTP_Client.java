@@ -6,11 +6,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.net.http.WebSocketHandshakeException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Scanner;
@@ -18,9 +22,9 @@ import java.util.Scanner;
 public class PTTP_Client {
 
     public static void main(String[] args) throws IOException {
-    	
-    	String message;
-        try (Scanner sc = new Scanner(System.in)) {
+        Scanner sc = new Scanner(System.in);
+    	while(true) {
+	    	String message;
 			int port;
 			String host;
 			String pathToFile = "";
@@ -31,7 +35,7 @@ public class PTTP_Client {
 			    
 			    if (split[0].equals("pttp:")) {
 			    	
-			    	port = Config.PORT;
+			    	port = 42750;
 			    	host = split[2];
 			    	int i=3;
 			    	while(i < split.length) {
@@ -42,7 +46,7 @@ public class PTTP_Client {
 			    }
 			    else if (split[0].equals("pttpu:")) {
 			    	
-			    	port = Config.PORT_U;
+			    	port = 42751;
 			    	host = split[2];
 			    	int i=3;
 			    	while(i < split.length) {
@@ -56,7 +60,7 @@ public class PTTP_Client {
 			    	continue;
 			    }
 			}
-			
+			//pttp://localhost/test
 			try (Socket socket = new Socket(host, port)) {
 				socket.setSoTimeout(1000);
 				
@@ -73,7 +77,9 @@ public class PTTP_Client {
 				    String line;
 				    while ((line = reader.readLine()) != null) {
 				        System.out.println(line);
-				    }
+				    } 
+				    socket.close();
+				    continue;
 				}
 				else if(port == 42751) {
 					
@@ -86,9 +92,15 @@ public class PTTP_Client {
 				    	String decodedString = new String(decodedBytes);
 				        System.out.println(decodedString);
 				    }
+				    socket.close();
+				    continue;
 				}
 			}catch (SocketTimeoutException ste){
-			    System.out.println("Timeout");
+			    System.out.println("Timeout\n");
+			}catch (UnknownHostException uhe) {
+				System.out.println("Unknown Host\n");
+			}catch (ConnectException ce){
+				System.out.println("Failed to Connect\n");
 			}
 		}
     }
