@@ -21,9 +21,12 @@ import java.util.Scanner;
 import javax.swing.JFrame;
 
 public class PTTP_Client {
-	PTTP_Client() {
+	String decodedString;
+	public PTTP_Client() {
+
 	}
-    public String communicate(string command) throws IOException {
+    public String[] communicate(String command) throws IOException {
+		decodedString = "";
 		String message;
 		int port;
 		String host;
@@ -41,7 +44,6 @@ public class PTTP_Client {
 				pathToFile += ("/" + split[i]);
 				i++;
 			}
-			break;
 		}
 		else if (split[0].equals("pttpu:")) {
 
@@ -52,10 +54,10 @@ public class PTTP_Client {
 				pathToFile += ("/" + split[i]);
 				i++;
 			}
-			break;
 			}
 			else {
 				System.out.println("Incorrect input.");
+				return decodedString.split(System.lineSeparator());
 			}
 		//pttp://localhost/test
 		try (Socket socket = new Socket(host, port)) {
@@ -70,10 +72,9 @@ public class PTTP_Client {
 			if(port == 42750) {
 
 				writer.println("GET " + pathToFile + " PTTP/1.0");
-
 				String line;
 				while ((line = reader.readLine()) != null) {
-					System.out.println(line);
+					decodedString += (line+'\n');
 				}
 				socket.close();
 			}
@@ -85,18 +86,19 @@ public class PTTP_Client {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					byte[] decodedBytes = Base64.getDecoder().decode(line);
-					String decodedString = new String(decodedBytes);
+					decodedString = new String(decodedBytes);
 					System.out.println(decodedString);
 				}
 				socket.close();
 			}
 		}catch (SocketTimeoutException ste){
-			System.out.println("Timeout\n");
+
 		}catch (UnknownHostException uhe) {
 			System.out.println("Unknown Host\n");
 		}catch (ConnectException ce){
 			System.out.println("Failed to Connect\n");
 		}
-		}
-    }
+		String[] out = decodedString.split("\n");
+		return out;
+	}
 }
