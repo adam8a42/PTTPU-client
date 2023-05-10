@@ -79,13 +79,13 @@ public class Frame extends JFrame {
                 if(Frame.this.files.getSelectedItem()!=null && !Frame.this.noJComboBoxListener){
                     String[] paths = Frame.this.address.getText().split("/");
                     String element = Frame.this.files.getSelectedItem().toString();
-                    if(element == "..") {
+                    if(element == ".." && paths.length >3) {
                         String path = "";
                         for(int i = 0; i< paths.length-1;i++)
                             path += (paths[i] + "/");
                         Frame.this.address.setText(path);
                     }
-                    else
+                    else if(element != "..")
                         Frame.this.address.setText(Frame.this.address.getText() + element + "/");
             }   }
         });
