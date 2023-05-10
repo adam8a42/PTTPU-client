@@ -1,74 +1,122 @@
 package client;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.ConnectException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.net.http.WebSocketHandshakeException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Scanner;
 import javax.swing.*;
-import java.awt.BorderLayout;
-
 
 
 public class Frame extends JFrame {
-    JToggleButton button;
+    boolean noJComboBoxListener;
+    JToggleButton encryptButton, runButton;
     JComboBox files;
+    JTextField address;
+    JPanel topPanel;
     PTTP_Client pttp_client;
     public String[] ls;
-    public boolean ready;
     public Frame() {
-        ready = false;
-        ls = new String[1];
-        ls[0] = ("..");
+        noJComboBoxListener = false;
+        ls = new String[]{".."};
+        this.setLocationRelativeTo(null);
         pttp_client = new PTTP_Client();
-        this.setSize(400, 300);
+        this.setSize(400, 140);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setVisible(true);
-        button = new JToggleButton("Encryption");
-        this.add(button, BorderLayout.NORTH);
-        button.setVisible(true);
+
+        encryptButton = new JToggleButton("Encryption");
+        this.add(encryptButton, BorderLayout.SOUTH);
+        encryptButton.setVisible(true);
+
+        runButton = new JToggleButton("Run");
         files = new JComboBox<String>(ls);
         this.add(files, BorderLayout.CENTER);
         files.setVisible(true);
-        files.addActionListener(new ActionListener() {
+
+        address = new JTextField();
+
+        address.setEditable(true);
+        topPanel = new JPanel();
+        topPanel.setLayout(new GridLayout(1,2));
+        this.add(topPanel, BorderLayout.NORTH);
+        topPanel.add(address);
+        topPanel.add(runButton);
+        topPanel.setVisible(true);
+        address.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!(address.getText().split("/")[0].equals("pttp:")) && !(address.getText().split("/")[0].equals("pttpu:")) )
+                {
+
+                    if (Frame.this.encryptButton.getModel().isSelected()) {
+                        address.setText("pttpu://" + address.getText());
+                    }
+                    else {
+                        address.setText("pttp://" + address.getText());
+                    }
+
+                }
+                if( address.getText().charAt(address.getText().length()-1)!='/')
+                    address.setText(address.getText() + "/");
+            }
+        });
+        runButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e){
-                if(ready) {
-                    try {
-                        System.out.println("1");
-                        String command = "";
-                        if (button.getModel().isSelected())
-                            command += "pttpu://";
-                        else command += "pttp://";
-                        command += "localhost/";
-                        command += Frame.this.files.getSelectedItem();
-                        String[] list = Frame.this.pttp_client.communicate(command);
-                        Frame.this.readls(list);
-                    } catch (IOException e2) {
-                        System.out.println("IO exception");
+                try {
+                    String command = address.getText();
+                    String[] list = Frame.this.pttp_client.communicate(command);
+                    Frame.this.readls(list);
+                } catch (IOException e2) {
+                    System.out.println("IO exception");
+                }
+                Frame.this.runButton.setSelected(false);
+
+            }
+        });
+        files.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(Frame.this.files.getSelectedItem()!=null && !Frame.this.noJComboBoxListener){
+                    String[] paths = Frame.this.address.getText().split("/");
+                    String element = Frame.this.files.getSelectedItem().toString();
+                    if(element == "..") {
+                        String path = "";
+                        for(int i = 0; i< paths.length-1;i++)
+                            path += (paths[i] + "/");
+                        Frame.this.address.setText(path);
                     }
+                    else
+                        Frame.this.address.setText(Frame.this.address.getText() + element + "/");
+            }   }
+        });
+        encryptButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(Frame.this.encryptButton.isSelected() && Frame.this.address.getText().split("/")[0].equals("pttp:"))
+                {
+                    String[] path = Frame.this.address.getText().split("/");
+                    path[0] = "pttpu:";
+                    String res = "";
+                    for (String i : path)
+                        res += (i + "/");
+                    Frame.this.address.setText(res);
+                }
+                if(!Frame.this.encryptButton.isSelected() && Frame.this.address.getText().split("/")[0].equals("pttpu:"))
+                {
+                    String[] path = Frame.this.address.getText().split("/");
+                    path[0] = "pttp:";
+                    String res = "";
+                    for (String i : path)
+                        res += (i + "/");
+                    Frame.this.address.setText(res);
                 }
             }
         });
+        this.setVisible(true);
     }
     public void readls(String[] list)
     {
-        ready = false;
+        noJComboBoxListener = true;
         this.ls = new String[list.length+1];
         this.ls[list.length] = "..";
         for (int i = 0; i < list.length; i++)
@@ -82,20 +130,9 @@ public class Frame extends JFrame {
         }
         files.setModel(model);
         this.files.repaint();
-        ready = true;
+        noJComboBoxListener = false;
     }
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Frame frame = new Frame();
-        try {
-            String command = "pttp";
-            if (frame.button.getModel().isSelected())
-                command = "pttpu";
-            String[] list = frame.pttp_client.communicate(command + "://localhost/ ");
-            frame.readls(list);
-            frame.ready = true;
-        }
-        catch(IOException e){
-            System.out.println("IO exception");
-        }
     }
 }

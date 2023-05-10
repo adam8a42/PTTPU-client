@@ -54,11 +54,11 @@ public class PTTP_Client {
 				pathToFile += ("/" + split[i]);
 				i++;
 			}
-			}
-			else {
-				System.out.println("Incorrect input.");
-				return decodedString.split(System.lineSeparator());
-			}
+		}
+		else {
+			System.out.println("Incorrect input.");
+			return decodedString.split(System.lineSeparator());
+		}
 		//pttp://localhost/test
 		try (Socket socket = new Socket(host, port)) {
 			socket.setSoTimeout(1000);
@@ -74,7 +74,8 @@ public class PTTP_Client {
 				writer.println("GET " + pathToFile + " PTTP/1.0");
 				String line;
 				while ((line = reader.readLine()) != null) {
-					decodedString += (line+'\n');
+					decodedString += (line+ "\n");
+					System.out.println(line);
 				}
 				socket.close();
 			}
