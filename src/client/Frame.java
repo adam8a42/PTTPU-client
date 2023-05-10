@@ -3,8 +3,14 @@ package client;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 
 public class Frame extends JFrame {
@@ -41,6 +47,7 @@ public class Frame extends JFrame {
         topPanel.add(address);
         topPanel.add(runButton);
         topPanel.setVisible(true);
+        
         address.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -62,10 +69,33 @@ public class Frame extends JFrame {
         runButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e){
-                try {
+            	try {
                     String command = address.getText();
                     String[] list = Frame.this.pttp_client.communicate(command);
-                    Frame.this.readls(list);
+                    
+                    if(Frame.this.address.getText().contains(".")) {
+                    	File fileName = null;
+
+                    	JFileChooser saveChooser = new JFileChooser();
+    					saveChooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"));
+    					int choice = saveChooser.showSaveDialog(Frame.this);
+    					if (choice == JFileChooser.APPROVE_OPTION) {
+    						fileName = saveChooser.getSelectedFile();
+
+    						try {
+    							OutputStreamWriter output = new  OutputStreamWriter(new FileOutputStream(fileName + ".txt"), Charset.forName("UTF-8").newEncoder());  
+    							String str = String.join("\n", list);
+    							output.write(str);
+    				            output.close();
+
+    						}catch (IOException d) {
+    							d.printStackTrace();
+    						}
+    					}
+                    }
+                    else {
+                    	Frame.this.readls(list);
+                    }
                 } catch (IOException e2) {
                     System.out.println("IO exception");
                 }
@@ -85,9 +115,11 @@ public class Frame extends JFrame {
                             path += (paths[i] + "/");
                         Frame.this.address.setText(path);
                     }
-                    else if(element != "..")
+                    else if(element != "..") {
                         Frame.this.address.setText(Frame.this.address.getText() + element + "/");
-            }   }
+                    }
+                }   
+            }
         });
         encryptButton.addActionListener(new ActionListener() {
             @Override
