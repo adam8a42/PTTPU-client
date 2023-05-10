@@ -84,8 +84,12 @@ public class Frame extends JFrame {
 
     						try {
     							OutputStreamWriter output = new  OutputStreamWriter(new FileOutputStream(fileName + ".txt"), Charset.forName("UTF-8").newEncoder());  
-    							String str = String.join("\n", list);
+    							String str = "";
+                                for (int i = 0; i < list.length; i++) {
+                                    str += list[i];
+                                }
     							output.write(str);
+                                System.out.println(str);
     				            output.close();
 
     						}catch (IOException d) {

@@ -75,7 +75,7 @@ public class PTTP_Client {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					decodedString += (line+ "\n");
-					System.out.println(line);
+					System.out.println(decodedString);
 				}
 				socket.close();
 			}
@@ -87,8 +87,7 @@ public class PTTP_Client {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					byte[] decodedBytes = Base64.getDecoder().decode(line);
-					decodedString = new String(decodedBytes);
-					System.out.println(decodedString);
+					decodedString += new String(decodedBytes);
 				}
 				socket.close();
 			}
