@@ -7,18 +7,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ConnectException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.net.http.WebSocketHandshakeException;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Scanner;
-import javax.swing.JFrame;
+
 
 public class PTTP_Client {
 	String decodedString;
@@ -71,11 +64,10 @@ public class PTTP_Client {
 
 			if(port == 42750) {
 
-				writer.println("GET " + pathToFile + " PTTP/1.0");
-				String line;
-				while ((line = reader.readLine()) != null) {
-					decodedString += (line+ "\n");
-					System.out.println(decodedString);
+				writer.println(("GET " + pathToFile + " PTTP/1.0"));
+				int c;
+				while ((c = reader.read())!=-1) {
+					decodedString += (char)c;
 				}
 				socket.close();
 			}
@@ -87,7 +79,7 @@ public class PTTP_Client {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					byte[] decodedBytes = Base64.getDecoder().decode(line);
-					decodedString += new String(decodedBytes);
+					decodedString += (new String(decodedBytes));
 				}
 				socket.close();
 			}
@@ -98,6 +90,7 @@ public class PTTP_Client {
 		}catch (ConnectException ce){
 			System.out.println("Failed to Connect\n");
 		}
+		decodedString = decodedString.replace("<<PTTP END>>","");
 		String[] out = decodedString.split("\n");
 		return out;
 	}

@@ -72,7 +72,6 @@ public class Frame extends JFrame {
             	try {
                     String command = address.getText();
                     String[] list = Frame.this.pttp_client.communicate(command);
-                    
                     if(Frame.this.address.getText().contains(".")) {
                     	File fileName = null;
 
@@ -86,10 +85,9 @@ public class Frame extends JFrame {
     							OutputStreamWriter output = new  OutputStreamWriter(new FileOutputStream(fileName + ".txt"), Charset.forName("UTF-8").newEncoder());  
     							String str = "";
                                 for (int i = 0; i < list.length; i++) {
-                                    str += list[i];
+                                    str += list[i] + "\n";
                                 }
     							output.write(str);
-                                System.out.println(str);
     				            output.close();
 
     						}catch (IOException d) {
